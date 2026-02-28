@@ -1,0 +1,43 @@
+{
+  "id": "basedclaw",
+  "name": "Basedclaw",
+  "version": "0.1.0",
+  "description": "3-tier intelligence routing for openclaw (sub-wit/mid-wit/big-wit)",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "model_routing": {
+        "type": "object",
+        "properties": {
+          "sub-wit": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mid-wit": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "big-wit": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "gateway_url": {
+        "type": "string"
+      },
+      "default_big_wit_agent": {
+        "type": "string",
+        "enum": ["opencode", "codex", "cursor-agent"]
+      }
+    },
+    "required": []
+  }
+}
