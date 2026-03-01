@@ -5,7 +5,7 @@ import { PLUGIN_ID } from './constants';
 let generationCounter = 0;
 
 export interface OmocPluginApi {
-  registerHook: (name: string, config: any) => void;
+  registerHook: (events: string | string[], handler: (...args: any[]) => any, opts?: { priority?: number; name?: string }) => void;
   registerTool: (name: string, config: any) => void;
   getConfig?: () => PluginConfig;
   [key: string]: any;
@@ -18,18 +18,15 @@ function makeGuardedApi(
 ): OmocPluginApi {
   return {
     ...api,
-    registerHook: (name: string, config: any) => {
+    registerHook: (events: string | string[], handler: (...args: any[]) => any, opts?: any) => {
       const guardedHandler = (...args: any[]) => {
         if (gen !== getLatestGen()) {
           return null;
         }
-        return config.handler(...args);
+        return handler(...args);
       };
 
-      api.registerHook(name, {
-        ...config,
-        handler: guardedHandler,
-      });
+      api.registerHook(events, guardedHandler, opts);
     },
     registerTool: (name: string, config: any) => {
       const guardedHandler = async (...args: any[]) => {

@@ -19,11 +19,9 @@ describe('integration', () => {
       tools,
       config,
       api: {
-        registerHook: (name: string, hookConfig: any) => {
-          hooks.push({ name, ...hookConfig });
-        },
-        on: (eventName: string, handler: any) => {
-          hooks.push({ event: eventName, handler });
+        registerHook: (events: string | string[], handler: any, opts?: any) => {
+          const eventArray = Array.isArray(events) ? events : [events];
+          hooks.push({ events: eventArray, handler, opts });
         },
         registerTool: (toolOrName: any, toolConfig?: any) => {
           if (typeof toolOrName === 'object') {
@@ -37,13 +35,14 @@ describe('integration', () => {
     };
   }
 
-  it('should register exactly 1 hook (before_agent_start)', () => {
+  it('should register exactly 1 hook (before_prompt_build)', () => {
     const { api, hooks } = createMockApi();
     register(api);
 
     expect(hooks).toHaveLength(1);
-    expect(hooks[0].event).toBe('before_agent_start');
+    expect(hooks[0].events).toContain('before_prompt_build');
     expect(typeof hooks[0].handler).toBe('function');
+    expect(hooks[0].opts?.name).toBe('wit-detector');
   });
 
   it('should register exactly 1 tool (oc_delegate)', () => {
@@ -138,18 +137,17 @@ describe('integration', () => {
   });
 
   describe('hook functionality', () => {
-    it('should add system prompt additions when keyword detected', () => {
+    it('should add prependContext when keyword detected', () => {
       const mock = createMockApi();
       register(mock.api);
 
       const event = {
         prompt: 'test message big-wit',
-        systemPromptAdditions: [] as string[],
       };
 
-      mock.hooks[0].handler(event, { config: {} });
-      expect(event.systemPromptAdditions.length).toBe(1);
-      expect(event.systemPromptAdditions[0]).toContain('big-wit');
+      const result = mock.hooks[0].handler(event, { config: {} });
+      expect(result.prependContext).toBeDefined();
+      expect(result.prependContext).toContain('big-wit');
     });
   });
 

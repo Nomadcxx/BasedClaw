@@ -109,18 +109,30 @@ export function witDetectorHandler(
 }
 
 export function createWitDetectorHook(api: any): void {
-  api.on('before_agent_start', (event: any, ctx: any) => {
-    if (!event || !event.prompt) {
-      return;
-    }
+  // openclaw registerHook signature: (events: string|string[], handler, opts?)
+  // - events: event name(s) to listen for
+  // - handler: function that receives (event, ctx) and returns modified event or null
+  // - opts: optional { priority?: number, name?: string }
+  api.registerHook(
+    'before_prompt_build',
+    (event: any, ctx: any) => {
+      const prompt = event?.prompt || '';
+      if (!prompt) {
+        return event;
+      }
 
-    const detection = detectWitTier(event.prompt);
-    if (!detection) {
-      return;
-    }
+      const detection = detectWitTier(prompt);
+      if (!detection) {
+        return event;
+      }
 
-    const contextMessage = buildContextMessage(detection);
-    event.systemPromptAdditions = event.systemPromptAdditions || [];
-    event.systemPromptAdditions.push(contextMessage);
-  });
+      const contextMessage = buildContextMessage(detection);
+      
+      return {
+        ...event,
+        prependContext: contextMessage,
+      };
+    },
+    { priority: 75, name: 'wit-detector' }
+  );
 }
