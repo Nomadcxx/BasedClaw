@@ -49,9 +49,15 @@ describe('integration', () => {
     const { api, tools } = createMockApi();
     register(api);
 
-    expect(tools).toHaveLength(1);
+    expect(tools).toHaveLength(4);
     expect(tools[0].name).toBe('oc_delegate');
     expect(tools[0].description).toContain('wit-tier');
+    expect(tools[1].name).toBe('oc_metrics');
+    expect(tools[1].description).toContain('metrics');
+    expect(tools[2].name).toBe('oc_config');
+    expect(tools[2].description).toContain('configuration');
+    expect(tools[3].name).toBe('oc_feedback');
+    expect(tools[3].description).toContain('feedback');
   });
 
   describe('full flow: keyword detection → tool dispatch', () => {

@@ -1,0 +1,23 @@
+# Source files (dist is included via files field)
+src/
+tests/
+
+# Config files
+tsconfig.json
+vitest.config.ts
+.github/
+
+# Development files
+*.log
+.DS_Store
+node_modules/
+coverage/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test artifacts
+/tmp/

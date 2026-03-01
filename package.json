@@ -1,9 +1,16 @@
 {
   "name": "basedclaw",
-  "version": "0.1.0",
-  "description": "3-tier intelligence routing for openclaw (sub-wit/mid-wit/big-wit) - basedclaw fork",
+  "version": "0.2.0",
+  "description": "3-tier intelligence routing plugin for openclaw - routes tasks to sub-wit/mid-wit/big-wit tiers based on complexity",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.js"
+    }
+  },
   "openclaw": {
     "extensions": [
       "./dist/index.js"
@@ -12,8 +19,37 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm test"
   },
+  "keywords": [
+    "openclaw",
+    "openclaw-plugin",
+    "ai",
+    "routing",
+    "llm",
+    "tier",
+    "intelligence",
+    "agent"
+  ],
+  "author": "Nomadcxx",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nomadcxx/BasedClaw.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Nomadcxx/BasedClaw/issues"
+  },
+  "homepage": "https://github.com/Nomadcxx/BasedClaw#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "dependencies": {
     "@sinclair/typebox": "^0.34.0"
   },

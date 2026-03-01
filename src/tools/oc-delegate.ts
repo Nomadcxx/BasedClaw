@@ -5,6 +5,7 @@ import {
   DEFAULT_BIG_WIT_AGENT,
   WitTier,
 } from '../constants';
+import { metrics } from '../metrics';
 
 export const OcDelegateSchema = {
   type: 'object',
@@ -154,6 +155,9 @@ export async function ocDelegateHandler(
   const config = ctx.config || {};
   const model = resolveModel(params.tier, config, params.model);
   const gatewayUrl = config.gateway_url || 'http://localhost:18789';
+  const dispatchMode = TIER_DISPATCH[params.tier];
+
+  metrics.recordDispatch(dispatchMode === 'gateway' ? 'gateway' : 'internal');
 
   return buildDelegationResponse(
     params.tier,

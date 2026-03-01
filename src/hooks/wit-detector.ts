@@ -3,6 +3,7 @@ import {
   EXPLICIT_OVERRIDES,
   WitTier,
 } from '../constants';
+import { metrics } from '../metrics';
 
 export interface WitDetection {
   tier: WitTier;
@@ -109,13 +110,9 @@ export function witDetectorHandler(
 }
 
 export function createWitDetectorHook(api: any): void {
-  // openclaw registerHook signature: (events: string|string[], handler, opts?)
-  // - events: event name(s) to listen for
-  // - handler: function that receives (event, ctx) and returns modified event or null
-  // - opts: optional { priority?: number, name?: string }
   api.registerHook(
     'before_prompt_build',
-    (event: any, ctx: any) => {
+    (event: any, _ctx: any) => {
       const prompt = event?.prompt || '';
       if (!prompt) {
         return event;
@@ -124,6 +121,11 @@ export function createWitDetectorHook(api: any): void {
       const detection = detectWitTier(prompt);
       if (!detection) {
         return event;
+      }
+
+      metrics.recordDetection(detection.tier);
+      if (detection.agent) {
+        metrics.recordOverride(detection.agent as 'codex' | 'cursor-agent' | 'opencode');
       }
 
       const contextMessage = buildContextMessage(detection);
