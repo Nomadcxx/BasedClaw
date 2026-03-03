@@ -13,9 +13,9 @@ BasedClaw implements a "wit-tier" system that classifies tasks into three comple
 |------|----------|----------|
 | sub-wit | Trivial tasks (typos, simple lookups) | Internal, direct answer |
 | mid-wit | Moderate tasks (feature implementation) | Internal agent session |
-| big-wit | Complex tasks (architecture, debugging) | External gateway dispatch |
+| big-wit | Complex tasks (architecture, debugging) | Spawns sub-agent via `sessions_spawn` |
 
-Detection works via keyword matching in prompts, with explicit overrides for forcing specific agents.
+Detection works via keyword matching in prompts, with explicit overrides for forcing specific tiers.
 
 ## Installation
 
@@ -43,12 +43,11 @@ Add to your `openclaw.json`:
     "basedclaw": {
       "enabled": true,
       "config": {
-        "gateway_url": "http://localhost:18789",
-        "default_big_wit_agent": "opencode",
+        "default_big_wit_agent": "main",
         "model_routing": {
-          "sub-wit": ["haiku-4.5", "gpt-5-mini"],
-          "mid-wit": ["sonnet-4.6", "kimi-k2.5"],
-          "big-wit": ["opus-4.6", "gpt-5.3-codex"]
+          "sub-wit": ["haiku-4.5", "gpt-5-mini", "qwen3.5"],
+          "mid-wit": ["sonnet-4.6", "glm-5", "deepseek-v3.2"],
+          "big-wit": ["opus-4.6", "gpt-5.3-codex", "minimax-m2.5"]
         }
       }
     }
@@ -60,8 +59,7 @@ Add to your `openclaw.json`:
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `gateway_url` | string | `http://localhost:18789` | URL for big-wit gateway dispatch |
-| `default_big_wit_agent` | string | `opencode` | Default agent for big-wit tasks |
+| `default_big_wit_agent` | string | `main` | Default agent for big-wit `sessions_spawn` |
 | `model_routing` | object | See below | Per-tier model preferences |
 
 ## Usage
@@ -87,9 +85,11 @@ Force a specific agent with override commands:
 
 | Command | Effect |
 |---------|--------|
-| `!codex` | Route to Codex agent (big-wit) |
-| `!cursor` | Route to Cursor agent (big-wit) |
-| `!opencode` | Route to OpenCode agent (big-wit) |
+| `!codex` | Force big-wit tier |
+| `!cursor` | Force big-wit tier |
+| `!opencode` | Force big-wit tier |
+
+All overrides currently route to the `main` agent. Add additional agents under `~/.openclaw/agents/` and update `EXPLICIT_OVERRIDES` in `constants.ts` to route to them.
 
 Example:
 ```
@@ -105,7 +105,7 @@ BasedClaw registers four tools:
 Manually delegate a task to a specific tier:
 
 ```
-oc_delegate(tier="big-wit", task_description="Architect a new API", agent="codex")
+oc_delegate(tier="big-wit", task_description="Architect a new API")
 ```
 
 Parameters:
@@ -175,7 +175,7 @@ if (!validation.valid) {
 ```typescript
 interface TierMetrics {
   detections: { 'sub-wit': number; 'mid-wit': number; 'big-wit': number };
-  overrides: { codex: number; 'cursor-agent': number; opencode: number };
+  overrides: Record<string, number>;
   dispatches: { internal: number; gateway: number };
   lastReset: string;
 }
@@ -235,7 +235,7 @@ tests/
 1. **Hook Registration**: `wit-detector` hook fires on `before_prompt_build` event
 2. **Detection**: Prompts are scanned for tier keywords (code blocks stripped first)
 3. **Context Injection**: Detected tier info is prepended to context via `prependContext`
-4. **Dispatch**: `oc_delegate` tool routes to appropriate handler based on tier
+4. **Dispatch**: `oc_delegate` tool handles sub-wit/mid-wit internally, big-wit returns `sessions_spawn` instructions for the LLM to execute
 
 ### Detection Priority
 
