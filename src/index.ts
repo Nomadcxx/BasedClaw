@@ -17,7 +17,7 @@ let generationCounter = 0;
 
 export interface OmocPluginApi {
   registerHook: (events: string | string[], handler: (...args: any[]) => any, opts?: { priority?: number; name?: string }) => void;
-  registerTool: (name: string, config: any) => void;
+  registerTool: (tool: any, opts?: any) => void;
   getConfig?: () => PluginConfig;
   [key: string]: any;
 }
@@ -39,20 +39,27 @@ function makeGuardedApi(
 
       api.registerHook(events, guardedHandler, opts);
     },
-    registerTool: (name: string, config: any) => {
-      const guardedHandler = async (...args: any[]) => {
-        if (gen !== getLatestGen()) {
-          throw new Error(
-            `Tool ${name} from generation ${gen} called but current generation is ${getLatestGen()}`
-          );
-        }
-        return config.handler(...args);
-      };
+    registerTool: (tool: any, opts?: any) => {
+      // OpenClaw's registerTool expects (toolObject, opts?) where toolObject
+      // has .name and .execute/.handler. Wrap execute/handler with generation guard.
+      const toolName = typeof tool === 'string' ? tool : tool?.name;
+      const toolObj = typeof tool === 'string' ? { name: tool, ...opts } : tool;
+      const originalHandler = toolObj.execute || toolObj.handler;
 
-      api.registerTool(name, {
-        ...config,
-        handler: guardedHandler,
-      });
+      if (originalHandler) {
+        const guardedHandler = async (...args: any[]) => {
+          if (gen !== getLatestGen()) {
+            throw new Error(
+              `Tool ${toolName} from generation ${gen} called but current generation is ${getLatestGen()}`
+            );
+          }
+          return originalHandler(...args);
+        };
+        toolObj.execute = guardedHandler;
+        toolObj.handler = guardedHandler;
+      }
+
+      api.registerTool(toolObj);
     },
     getConfig: api.getConfig || (() => ({})),
   };

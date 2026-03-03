@@ -6,8 +6,8 @@ export type WitTier = typeof WIT_TIERS[number];
 
 export const DEFAULT_TIER_MODELS: Record<WitTier, string[]> = {
   'sub-wit': ['haiku-4.5', 'gpt-5-mini', 'qwen3.5'],
-  'mid-wit': ['sonnet-4.6', 'kimi-k2.5', 'glm-5.0'],
-  'big-wit': ['opus-4.6', 'gpt-5.3-codex', 'kimi-k2.5:cloud'],
+  'mid-wit': ['sonnet-4.6', 'glm-5', 'deepseek-v3.2'],
+  'big-wit': ['opus-4.6', 'gpt-5.3-codex', 'minimax-m2.5'],
 };
 
 export type DispatchMode = 'internal' | 'gateway';
@@ -18,7 +18,7 @@ export const TIER_DISPATCH: Record<WitTier, DispatchMode> = {
   'big-wit': 'gateway',
 };
 
-export const DEFAULT_BIG_WIT_AGENT = 'opencode';
+export const DEFAULT_BIG_WIT_AGENT = 'main';
 
 export const WIT_PATTERNS: Record<WitTier, RegExp> = {
   'sub-wit': /\b(sub[- ]?wit|trivial|simple|quick)\b/i,
@@ -32,7 +32,7 @@ export interface ExplicitOverride {
 }
 
 export const EXPLICIT_OVERRIDES: Record<string, ExplicitOverride> = {
-  '!codex': { tier: 'big-wit', agent: 'codex' },
-  '!cursor': { tier: 'big-wit', agent: 'cursor-agent' },
-  '!opencode': { tier: 'big-wit', agent: 'opencode' },
+  '!codex': { tier: 'big-wit', agent: 'main' },
+  '!cursor': { tier: 'big-wit', agent: 'main' },
+  '!opencode': { tier: 'big-wit', agent: 'main' },
 };

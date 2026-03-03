@@ -159,13 +159,31 @@ export async function ocDelegateHandler(
 
   metrics.recordDispatch(dispatchMode === 'gateway' ? 'gateway' : 'internal');
 
-  return buildDelegationResponse(
-    params.tier,
-    params.task_description,
-    model,
-    params.agent || null,
-    gatewayUrl
-  );
+  if (dispatchMode === 'internal') {
+    return buildDelegationResponse(
+      params.tier,
+      params.task_description,
+      model,
+      params.agent || null,
+      gatewayUrl
+    );
+  }
+
+  // big-wit: instruct the LLM to use sessions_spawn (built-in tool)
+  const targetAgent = params.agent || DEFAULT_BIG_WIT_AGENT;
+  return `[DELEGATION: ${params.tier}] → USE sessions_spawn
+Task classified as ${params.tier} (complex). You MUST now call the \`sessions_spawn\` tool with these parameters:
+
+\`\`\`json
+{
+  "agentId": "${targetAgent}",
+  "model": "${model}",
+  "label": "basedclaw:${params.tier}",
+  "message": ${JSON.stringify(params.task_description)}
+}
+\`\`\`
+
+After spawning, use \`subagents\` to monitor the session. Report the result when complete.`;
 }
 
 export function createOcDelegateTool(api: any, getConfig: () => PluginConfig): void {
